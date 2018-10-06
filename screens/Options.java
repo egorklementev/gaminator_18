@@ -178,17 +178,17 @@ public class Options extends AdvScreen {
 
         scroll_m = new AdvSprite(
                 g.atlas.createSprite("scroll_line"),
-                0.225f * g.w,
-                0.625f * g.w,
-                0.4f * g.w,
-                0.05f * g.w
+                0.15f * g.w,
+                0.3125f * g.w,
+                0.2f * g.w,
+                0.025f * g.w
         );
         scroll_s = new AdvSprite(
                 g.atlas.createSprite("scroll_line"),
-                0.225f * g.w,
-                0.375f * g.w,
-                0.4f * g.w,
-                0.05f * g.w
+                0.15f * g.w,
+                0.1875f * g.w,
+                0.2f * g.w,
+                0.025f * g.w
         );
 
         //
@@ -198,9 +198,9 @@ public class Options extends AdvScreen {
         /* --BACK-- */
         back = new Button(
                 g,
-                0.675f * g.w,
-                0.025f * g.w,
-                0.3f * g.w,
+                .875f * g.w,
+                .025f * g.w,
+                .1f * g.w,
                 g.fonts.f_5.getFont(),
                 g.bundle.get("back_btn"),
                 1,
@@ -220,19 +220,19 @@ public class Options extends AdvScreen {
         /* --LANG_RU-- */
         lang_ru = new AdvSprite(
                 g.atlas.createSprite("opt_lang_ru"),
-                0.01f * g.w,
-                0.01f * g.w,
-                0.2f * g.w,
-                0.2f * g.w
+                .025f * g.w,
+                .025f * g.w,
+                .1f * g.w,
+                .1f * g.w
         );
-        if (g.lang != 1) lang_ru.setColor(Color.GRAY);
+        if (g.lang != 0) lang_ru.setColor(Color.GRAY);
         lang_ru.addListener(new ClickListener(){
             @Override
             public void clicked (InputEvent event, float x, float y) {
                 if (g.is_sound) g.sounds.click.play(g.sound_volume); // Click sound
                 lang_ru.setColor(Color.WHITE);
                 lang_en.setColor(Color.GRAY);
-                g.lang = 1;
+                g.lang = 0;
                 g.bundle = I18NBundle.createBundle(Gdx.files.internal("lang/ru_RU"));
                 text_options.setText(g.bundle.get("options_btn"));
                 text_options.setPosition(.5f*(g.w - g.fonts.f_0S.getWidth(g.bundle.get("options_btn"))), text_options.getY());
@@ -243,19 +243,19 @@ public class Options extends AdvScreen {
         /* --LANG_EN-- */
         lang_en = new AdvSprite(
                 g.atlas.createSprite("opt_lang_en"),
-                0.225f * g.w,
-                0.01f * g.w,
-                0.2f * g.w,
-                0.2f * g.w
+                .15f * g.w,
+                .025f * g.w,
+                0.1f * g.w,
+                0.1f * g.w
         );
-        if (g.lang != 0) lang_en.setColor(Color.GRAY);
+        if (g.lang != 1) lang_en.setColor(Color.GRAY);
         lang_en.addListener(new ClickListener(){
             @Override
             public void clicked (InputEvent event, float x, float y) {
                 if (g.is_sound) g.sounds.click.play(g.sound_volume); // Click sound
                 lang_ru.setColor(Color.GRAY);
                 lang_en.setColor(Color.WHITE);
-                g.lang = 0;
+                g.lang = 1;
                 g.bundle = I18NBundle.createBundle(Gdx.files.internal("lang/en_US"));
                 text_options.setText(g.bundle.get("options_btn"));
                 text_options.setPosition(.5f*(g.w - g.fonts.f_0S.getWidth(g.bundle.get("options_btn"))), text_options.getY());
@@ -266,10 +266,10 @@ public class Options extends AdvScreen {
         /* --SOUND-- */
         sound_on = new AdvSprite(
                 g.atlas.createSprite("opt_sound"),
-                0.01f * g.w,
-                0.3f * g.w,
-                0.2f * g.w,
-                0.2f * g.w
+                0.025f * g.w,
+                0.15f * g.w,
+                0.1f * g.w,
+                0.1f * g.w
         );
         if (!g.is_sound) sound_on.setColor(Color.GRAY);
         sound_on.addListener(new ClickListener(){
@@ -289,10 +289,10 @@ public class Options extends AdvScreen {
         /* --MUSIC-- */
         music_on = new AdvSprite(
                 g.atlas.createSprite("opt_music"),
-                0.01f * g.w,
-                0.55f * g.w,
-                0.2f * g.w,
-                0.2f * g.w
+                0.025f * g.w,
+                0.275f * g.w,
+                0.1f * g.w,
+                0.1f * g.w
         );
         if (!g.is_music) music_on.setColor(Color.GRAY);
         music_on.addListener(new ClickListener(){
@@ -317,16 +317,16 @@ public class Options extends AdvScreen {
         r_music = new AdvSprite(
                 g.atlas.createSprite("rhombus"),
                 scroll_m.getX() + g.music_volume * (scroll_m.getX() + scroll_m.getWidth()) - 0.0035f * g.w,
-                0.6175f * g.w,
-                0.075f * g.w,
-                0.075f * g.w
+                0.3f * g.w,
+                0.05f * g.w,
+                0.05f * g.w
         );
         r_sound = new AdvSprite(
                 g.atlas.createSprite("rhombus"),
                 scroll_s.getX() + g.sound_volume * (scroll_s.getX() + scroll_s.getWidth()) - 0.0035f * g.w,
-                0.3675f * g.w,
-                0.075f * g.w,
-                0.075f * g.w
+                0.175f * g.w,
+                0.05f * g.w,
+                0.05f * g.w
         );
 
         scroll_m.addListener(new ClickListener(){

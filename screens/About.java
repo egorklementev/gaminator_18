@@ -83,11 +83,11 @@ public class About extends AdvScreen {
         }
 
         /* Teleportation of rhombus & text_h */
-        if (captions.getY() > 1.4f * g.h) {
+        if (captions.getY() > 1.5f * g.h) {
             captions.addAction(Actions.moveBy(0f, -2.05f * g.h));
             rhombus.setY(rhombus.getY() - 2.05f * g.h);
         }
-        if (captions.getY() + captions.getHeight() < -0.05f * g.h) {
+        if (captions.getY() + captions.getHeight() < -0.15f * g.h) {
             captions.addAction(Actions.moveBy(0f,2.05f * g.h));
             rhombus.setY(rhombus.getY() + 2.05f * g.h);
         }
@@ -140,10 +140,10 @@ public class About extends AdvScreen {
 
         rhombus = new AdvSprite(
                 g.atlas.createSprite("rhombus"),
-                0.375f * g.w,
-                -0.275f * g.w,
-                0.25f * g.w,
-                0.25f * g.w
+                (0.5f - 0.5f * 0.125f) * g.w,
+                -0.15f * g.w,
+                0.125f * g.w,
+                0.125f * g.w
         );
         rhombus.addListener(new ClickListener(){
             @Override
@@ -159,9 +159,9 @@ public class About extends AdvScreen {
         /* --BACK-- */
         back = new Button(
                 g,
-                0.675f * g.w,
+                0.875f * g.w,
                 0.025f * g.w,
-                0.3f * g.w,
+                0.1f * g.w,
                 g.fonts.f_5.getFont(),
                 g.bundle.get("back_btn"),
                 1,

@@ -31,14 +31,14 @@ public class Menu extends AdvScreen {
     /* Random */
     private final int HONEYCOMBS = 10; // Background
 
-    Menu (Main game) {
+    Menu(Main game) {
         //
         super(game);
         //
     }
 
     @Override
-    public void show () {
+    public void show() {
         //
         super.show();
 
@@ -95,7 +95,7 @@ public class Menu extends AdvScreen {
         //
     }
 
-    private void text_initialization () {
+    private void text_initialization() {
         //
         version = new TextLine(
                 g.fonts.f_15,
@@ -106,7 +106,7 @@ public class Menu extends AdvScreen {
         version.setColor(Color.DARK_GRAY);
         //
     }
-    private void texture_initialization () {
+    private void texture_initialization() {
         //
         background = new ArrayList<>();
         for (int i = 0; i < HONEYCOMBS * HONEYCOMBS; i++) {
@@ -140,7 +140,7 @@ public class Menu extends AdvScreen {
 
         //
     }
-    private void button_initialization () {
+    private void button_initialization() {
         //
 
         buttons = new ArrayList<>();
@@ -233,7 +233,7 @@ public class Menu extends AdvScreen {
                     if (g.is_sound) g.sounds.click.play(g.sound_volume); // Click sound
                     if (g.sounds.music_1.isPlaying()) g.sounds.music_1.stop();
                     change_screen = true;
-                    //next_screen = new Lab(g);
+                    next_screen = new Field(g);
                     start.get().setChecked(false);
                     for (Actor act : stage.getActors()) act.addAction(Actions.alpha(0f, .5f));
                 }
@@ -265,7 +265,7 @@ public class Menu extends AdvScreen {
         //
     }
 
-    private void stage_addition () {
+    private void stage_addition() {
         //
         for (AdvSprite s : background) stage.addActor(s);
         stage.addActor(logo);

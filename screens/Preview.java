@@ -26,15 +26,21 @@ public class Preview extends AdvScreen {
     @Override
     public void show () {
         //
-        /*  Initialisation of main game systems */
+        /*  Initialization of main game systems */
         g.prefs = Gdx.app.getPreferences("bee_life_prefs");
-        g.lang = g.prefs.getInteger("language");
+        g.lang = g.prefs.getInteger("language", 0);
         g.atlas = new TextureAtlas("textures/bee_life_resources.atlas");
         g.sounds = new Sounds();
 
-        FileHandle baseFileHandle = Gdx.files.internal("lang/ru_RU");
-        Locale locale = new Locale("ru", "RU");
-        g.bundle = I18NBundle.createBundle(baseFileHandle, locale);
+        if (g.lang == 0) {
+            FileHandle baseFileHandle = Gdx.files.internal("lang/ru_RU");
+            Locale locale = new Locale("ru", "RU");
+            g.bundle = I18NBundle.createBundle(baseFileHandle, locale);
+        } else {
+            FileHandle baseFileHandle = Gdx.files.internal("lang/en_US");
+            Locale locale = new Locale("en", "US");
+            g.bundle = I18NBundle.createBundle(baseFileHandle, locale);
+        }
 
         g.fonts = new Fonts(g.bundle.get("FONT_CHARS"));
 
@@ -52,6 +58,8 @@ public class Preview extends AdvScreen {
             g.sounds.music_1.setVolume(g.music_volume);
             g.sounds.music_1.play();
         }
+
+        Main.s_meter = g.w / 20f;
 
     }
 
