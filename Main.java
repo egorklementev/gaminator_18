@@ -18,7 +18,6 @@ public class Main extends Game {
 	public I18NBundle bundle;
 	public float w;
 	public float h;
-	public static float s_meter;
 
 	/* Values to memorise */
 	public boolean is_sound = true;

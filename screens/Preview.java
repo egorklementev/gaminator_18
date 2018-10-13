@@ -59,8 +59,6 @@ public class Preview extends AdvScreen {
             g.sounds.music_1.play();
         }
 
-        Main.s_meter = g.w / 20f;
-
     }
 
     @Override

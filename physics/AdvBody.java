@@ -1,5 +1,6 @@
 package ru.erked.beelife.physics;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -42,11 +43,18 @@ public class AdvBody extends Actor {
     @Override
     public void act(float delta) {
         super.act(delta);
+
+        setX(body.getPosition().x * 10f);
+        setY(body.getPosition().y * 10f);
+
+        setRotation(MathUtils.radiansToDegrees * body.getAngle());
+
         for (AdvBodyPart part : parts) {
             part.setPosition(
-                    part.getOffsetX() + body.getPosition().x,
-                    part.getOffsetY() + body.getPosition().y
+                    getX() - 0.5f * part.getWidth(),
+                    getY() - 0.5f * part.getHeight()
             );
+            part.setRotation(getRotation());
         }
     }
 }

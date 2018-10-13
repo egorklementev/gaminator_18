@@ -3,15 +3,19 @@ package ru.erked.beelife.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import ru.erked.beelife.Main;
 import ru.erked.beelife.physics.AdvBody;
 import ru.erked.beelife.physics.AdvBodyPart;
 import ru.erked.beelife.systems.AdvCamera;
 import ru.erked.beelife.systems.AdvScreen;
+import ru.erked.beelife.systems.TextLine;
 
 import java.util.ArrayList;
 
@@ -21,10 +25,15 @@ public class Field extends AdvScreen {
     private Box2DDebugRenderer debugRenderer;
 
     private AdvBody player;
+    private AdvBody wall;
 
     private AdvCamera camera;
 
+    private TextLine test_text;
+
     private ArrayList<AdvBody> movingBodies;
+
+    private final float METER = 10f;
 
     Field(Main game) {
         //
@@ -45,8 +54,8 @@ public class Field extends AdvScreen {
             g.sounds.music_2.play();
         }
 
-        camera = new AdvCamera(g.w / 16f, g.h / 16f);
-        camera.set(stage.getCamera());
+        camera = new AdvCamera(g.w, g.h);
+        stage = new Stage(new FitViewport(g.w, g.h, camera.get()), new SpriteBatch());
 
         world_initialization();
         bodies_initialization();
@@ -81,19 +90,18 @@ public class Field extends AdvScreen {
             }
         }
 
+        /* TEXT */
+        // Set some text here
+        test_text.setPosition(camera.getX() - .475f * g.w, camera.getY() - .475f * g.h + g.fonts.f_5.getHeight("A"));
+
         camera.setPosition(player.getX(), player.getY());
 
         stage.act(delta);
-        debugRenderer.render(world, camera.get().combined);
+        debugRenderer.render(world, camera.get().combined.cpy().scl(10f));
         stage.draw();
 
-        /* Controls */
-        if (Gdx.input.isKeyJustPressed(Input.Keys.UP)) {
-            player.getBody().applyForceToCenter(
-                    new Vector2(10f * Main.s_meter, 10f * Main.s_meter),
-                    true
-            );
-        }
+        playerControls();
+        playerRotation();
 
         friction();
 
@@ -111,7 +119,7 @@ public class Field extends AdvScreen {
         movingBodies = new ArrayList<>();
 
         player = new AdvBody(
-                new Vector2(10f, 10f),
+                new Vector2(1f, 1f),
                 BodyDef.BodyType.DynamicBody
         );
         player.createBody(world);
@@ -119,25 +127,53 @@ public class Field extends AdvScreen {
         CircleShape playerShape = new CircleShape();
         playerShape.setRadius(5f);
 
-        FixtureDef fixDef = new FixtureDef();
-        fixDef.shape = playerShape;
-        fixDef.friction = 0f;
-        fixDef.density = 0.1f;
-        fixDef.restitution = 0.1f;
+        FixtureDef player_fd = new FixtureDef();
+        player_fd.shape = playerShape;
+        player_fd.friction = .1f;
+        player_fd.density = .1f;
+        player_fd.restitution = .1f;
 
-        AdvBodyPart mainPart = new AdvBodyPart(
+        AdvBodyPart playerPart = new AdvBodyPart(
                 g.atlas.createSprite("bee_player"),
-                -5f,
-                -5f,
-                10f,
-                10f,
+                -5f * METER,
+                -5f * METER,
+                10f * METER,
+                10f * METER,
                 playerShape,
-                fixDef
+                player_fd
         );
 
-        player.addPart(mainPart);
+        player.addPart(playerPart);
+        player.setSize(5f * METER, 5f * METER);
+
+        // WALL
+        wall = new AdvBody(
+                new Vector2(5f, 5f),
+                BodyDef.BodyType.DynamicBody
+        );
+        wall.createBody(world);
+
+        PolygonShape wallShape = new PolygonShape();
+        wallShape.setAsBox(20f, 10f);
+
+        FixtureDef wall_fd = new FixtureDef();
+        wall_fd.shape = wallShape;
+        wall_fd.friction = .1f;
+
+        AdvBodyPart wallPart = new AdvBodyPart(
+                g.atlas.createSprite("button_up"),
+                -20f * METER,
+                -10f * METER,
+                40f * METER,
+                20f * METER,
+                wallShape,
+                wall_fd
+        );
+
+        wall.addPart(wallPart);
 
         movingBodies.add(player);
+        movingBodies.add(wall);
         //
     }
     private void world_initialization() {
@@ -145,14 +181,62 @@ public class Field extends AdvScreen {
         debugRenderer = new Box2DDebugRenderer();
         debugRenderer.setDrawBodies(true);
     }
-    private void text_initialization() {}
+    private void text_initialization() {
+        //
+        test_text = new TextLine(
+                g.fonts.f_5,
+                "test",
+                0.025f * g.w,
+                g.fonts.f_5.getHeight("A") + 0.025f * g.w
+        );
+        //
+    }
     private void texture_initialization() {}
     private void button_initialization() {}
 
+    private void playerControls() {
+        //
+        if (Gdx.input.isTouched()) {
+            float x = Gdx.input.getX() - .5f * g.w;
+            float y = (g.h - Gdx.input.getY()) - .5f * g.h;
+
+            if (Math.abs(x) < player.getWidth()) {
+                x = 0f;
+            }
+            if (Math.abs(y) < player.getHeight()) {
+                y = 0f;
+            }
+
+            test_text.setText("X: " + x + " __ Y: " + y);
+
+            player.getBody().applyForceToCenter(
+                    new Vector2(
+                            x,
+                            y
+                    ).nor().scl(150f * METER),
+                    true
+            );
+        }
+        //
+    }
+    private void playerRotation() {
+        //
+        float x = Gdx.input.getX() - .5f * g.w;
+        float y = Gdx.input.getY() - .5f * g.h;
+        float angle = (float)(Math.atan2(x, y) + Math.PI);
+
+        player.getBody().setTransform(player.getBody().getPosition(), angle);
+        //
+    }
+
     private void stage_addition() {
         stage.addActor(player);
-        for (AdvBodyPart playerPart : player.getParts())
-            stage.addActor(playerPart);
+        for (AdvBodyPart part : player.getParts())
+            stage.addActor(part);
+        stage.addActor(wall);
+        for (AdvBodyPart part : wall.getParts())
+            stage.addActor(part);
+        stage.addActor(test_text);
         stage.addActor(camera);
     }
 
@@ -161,8 +245,8 @@ public class Field extends AdvScreen {
             if (body.getBody().getLinearVelocity().len() > 0.01f) {
                 body.getBody().setLinearVelocity(
                          new Vector2(
-                                 body.getBody().getLinearVelocity().x * 0.9f,
-                                 body.getBody().getLinearVelocity().y * 0.9f
+                                 body.getBody().getLinearVelocity().x * 0.975f,
+                                 body.getBody().getLinearVelocity().y * 0.975f
                          )
                 );
             }

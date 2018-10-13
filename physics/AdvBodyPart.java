@@ -11,16 +11,10 @@ public class AdvBodyPart extends AdvSprite implements Disposable {
     private Shape shape;
     private FixtureDef fixtureDef;
 
-    private float offsetX;
-    private float offsetY;
-
     public AdvBodyPart(Sprite sprite, float x, float y, float w, float h, Shape shape, FixtureDef fixtureDef) {
         super(sprite, x, y, w, h);
         this.shape = shape;
         this.fixtureDef = fixtureDef;
-
-        offsetX = x;
-        offsetY = y;
     }
 
     public Shape getShape() {
@@ -29,14 +23,6 @@ public class AdvBodyPart extends AdvSprite implements Disposable {
 
     FixtureDef getFixtureDef() {
         return fixtureDef;
-    }
-
-    float getOffsetX() {
-        return offsetX;
-    }
-
-    float getOffsetY() {
-        return offsetY;
     }
 
     @Override
