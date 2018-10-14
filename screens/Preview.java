@@ -5,9 +5,11 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.utils.I18NBundle;
 import ru.erked.beelife.Main;
 import ru.erked.beelife.systems.AdvScreen;
+import ru.erked.beelife.systems.AdvSprite;
 import ru.erked.beelife.utils.Fonts;
 import ru.erked.beelife.utils.Sounds;
 
@@ -16,6 +18,8 @@ import java.util.Locale;
 public class Preview extends AdvScreen {
 
     private float timer = 0f;
+
+    private AdvSprite logo;
 
     public Preview (Main game) {
         //
@@ -59,6 +63,23 @@ public class Preview extends AdvScreen {
             g.sounds.music_1.play();
         }
 
+        Main.METER = g.w / 192f;
+
+        logo = new AdvSprite(
+                g.atlas.createSprite("logo_gmntr"),
+                0f,
+                0f,
+                g.w,
+                g.h
+        );
+        logo.addAction(Actions.alpha(0f));
+        logo.addAction(Actions.sequence(
+                Actions.alpha(1f, 1.5f),
+                Actions.delay(1f),
+                Actions.alpha(0f, 1.5f)
+        ));
+
+        stage.addActor(logo);
     }
 
     @Override
