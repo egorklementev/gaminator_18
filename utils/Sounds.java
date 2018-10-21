@@ -10,10 +10,11 @@ import java.util.Arrays;
 public class Sounds {
 
     /* Random */
-    public Sound click;
-    public Sound bee_fly;
     public Sound coin;
     public Sound hurt;
+    public Sound click;
+    public Sound shoot;
+    public Sound healing;
 
     /* Music */
     public Music music_1;
@@ -28,7 +29,8 @@ public class Sounds {
         m_list = new ArrayList<>();
 
         click = Gdx.audio.newSound(Gdx.files.internal("sounds/random/click.wav"));
-        bee_fly = Gdx.audio.newSound(Gdx.files.internal("sounds/random/bee_fly.wav"));
+        shoot = Gdx.audio.newSound(Gdx.files.internal("sounds/random/shoot.wav"));
+        healing = Gdx.audio.newSound(Gdx.files.internal("sounds/random/healing.wav"));
         coin = Gdx.audio.newSound(Gdx.files.internal("sounds/random/coin.wav"));
         hurt = Gdx.audio.newSound(Gdx.files.internal("sounds/random/hurt.wav"));
 

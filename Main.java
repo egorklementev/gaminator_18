@@ -19,6 +19,8 @@ public class Main extends Game {
 	public float w;
 	public float h;
 	public static float METER;
+	public int level;
+	public boolean is_dev_mode;
 
 	/* Values to memorise */
 	public boolean is_sound = true;

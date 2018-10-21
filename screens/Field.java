@@ -15,10 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import ru.erked.beelife.Main;
-import ru.erked.beelife.ai.Ant;
-import ru.erked.beelife.ai.Bug;
-import ru.erked.beelife.ai.Entity;
-import ru.erked.beelife.ai.Wasp;
+import ru.erked.beelife.ai.*;
 import ru.erked.beelife.physics.AdvBody;
 import ru.erked.beelife.physics.AdvBodyPart;
 import ru.erked.beelife.physics.AdvContactListener;
@@ -39,6 +36,7 @@ public class Field extends AdvScreen {
     private AdvCamera camera;
     private TextLine test_text;
     private TextLine score_text;
+    private TextLine goal_text;
     private ArrayList<Ant> ants;
     private ArrayList<Bug> bugs;
     private AdvSprite map;
@@ -47,14 +45,20 @@ public class Field extends AdvScreen {
     private ArrayList<AdvSprite> map_pollen;
     private ArrayList<AdvSprite> flowers;
     private ArrayList<AdvSprite> ui_hp;
+    private ArrayList<AdvSprite> queen_clouds;
     private boolean is_map_big = false;
+    private int goal;
     private int hp = 3;
     private int score = 0;
-    private long bee_fly_instance;
+    private float hit_timer = 0f;
 
     public static AdvBody player;
     public static ArrayList<AdvBody> pollen;
-    public static ArrayList<Wasp> wasps;
+    public static ArrayList<Bug> ladybugs;
+    public static ArrayList<WaspN> waspsN;
+    public static ArrayList<WaspP> waspsP;
+    public static ArrayList<WaspF> waspsF;
+    public static ArrayList<Bullet> bullets;
     public static float state_time = 0f;
 
     Field(Main game) {
@@ -69,6 +73,8 @@ public class Field extends AdvScreen {
         super.show();
 
         Box2D.init();
+
+        goal = (g.level + 1) * 100;
 
         if (g.is_music && !change_screen) {
             g.sounds.music_2.setLooping(true);
@@ -88,8 +94,6 @@ public class Field extends AdvScreen {
         particle_initialization();
         stage_addition();
 
-        bee_fly_instance = g.sounds.bee_fly.loop(g.sound_volume);
-
         /* For smooth transition btw screens */
         for (Actor act : stage.getActors()) {
             act.getColor().set(act.getColor().r, act.getColor().g, act.getColor().b, 0f);
@@ -101,7 +105,7 @@ public class Field extends AdvScreen {
     public void render(float delta) {
         //
         super.render(delta);
-        Gdx.gl.glClearColor(0.0625f, 0.5f, 0.125f, 1f);
+        Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         state_time += delta;
@@ -113,28 +117,47 @@ public class Field extends AdvScreen {
                 g.setScreen(next_screen);
             } else {
                 for (Actor act : stage.getActors()) {
-                    act.addAction(Actions.alpha(1f, .5f));
+                    if (act instanceof AdvSprite) {
+                        if (!queen_clouds.contains(act)) {
+                            act.addAction(Actions.alpha(1f, .5f));
+                        }
+                    } else {
+                        act.addAction(Actions.alpha(1f, .5f));
+                    }
                 }
             }
         }
         // endregion
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
-            hitPlayer();
+        // region WINNING CONDITION
+        if (score >= goal && !change_screen) {
+            g.level++;
+            for (Actor act : stage.getActors()) act.addAction(Actions.alpha(0f, 5f));
+            stage.addActor(new TextNotification(
+                    g.fonts.f_0S,
+                    g.bundle.get("level_complete"),
+                    camera.getX() - .5f * g.fonts.f_0S.getWidth(g.bundle.get("level_complete")),
+                    camera.getY(),
+                    4f
+            ));
+            change_screen = true;
+            next_screen = new Field(g);
         }
-
+        // endregion
+        // region END OF THE GAME
         if (hp == 0 && !change_screen) {
-            for (Actor act : stage.getActors()) act.addAction(Actions.alpha(0f, 3f));
+            for (Actor act : stage.getActors()) act.addAction(Actions.alpha(0f, 5f));
             stage.addActor(new TextNotification(
                     g.fonts.f_0S,
                     g.bundle.get("game_over"),
                     camera.getX() - .5f * g.fonts.f_0S.getWidth(g.bundle.get("game_over")),
                     camera.getY(),
-                    3f
+                    4f
             ));
             change_screen = true;
             next_screen = new Field(g);
         }
+        // endregion
 
         camera.setPosition(player.getX(), player.getY());
 
@@ -153,6 +176,12 @@ public class Field extends AdvScreen {
                 camera.getX() + 0.475f * g.w - g.fonts.f_5.getWidth(g.bundle.get("score") + ": " + score),
                 camera.getY() + 0.475f * g.h
         );
+        score_text.toFront();
+        goal_text.setPosition(
+                camera.getX() + 0.475f * g.w - g.fonts.f_5.getWidth(g.bundle.get("goal") + ": " + goal),
+                camera.getY() + 0.475f * g.h - 1.5f * g.fonts.f_5.getHeight("A")
+        );
+        goal_text.toFront();
 
         /* MAP */
         map.setPosition(
@@ -231,8 +260,17 @@ public class Field extends AdvScreen {
         if (MathUtils.random() > 0.9900f) {
             spawnBug();
         }
-        if (MathUtils.random() > 0.9950f) {
-            spawnWasp();
+        if (g.level > 1 && MathUtils.random() > 0.99875f) {
+            spawnLadybug();
+        }
+        if ((g.level == 2 || g.level == 3) && MathUtils.random() > 0.9950f) {
+            spawnWaspP();
+        }
+        if (g.level > 3 && MathUtils.random() > 0.9950f) {
+            spawnWaspN();
+        }
+        if (g.level > 5 && MathUtils.random() > 0.9975f) {
+            spawnWaspF();
         }
         if (MathUtils.random() > 0.9925f) {
             spawnPollen();
@@ -241,34 +279,60 @@ public class Field extends AdvScreen {
 
         stage.act(delta);
         stage.draw();
-        debugRenderer.render(world, camera.get().combined.cpy().scl(Main.METER));
+        if (g.is_dev_mode) {
+            debugRenderer.render(world, camera.get().combined.cpy().scl(Main.METER));
+        }
 
         rotations();
         playerControls();
         if (player.getBody().getLinearVelocity().len() > 10f) {
             player.getParts().get(0).getSprite().setRegion(a_player.getKeyFrame(state_time, true));
-            g.sounds.bee_fly.resume(bee_fly_instance);
-        } else {
-            g.sounds.bee_fly.pause(bee_fly_instance);
         }
 
         // region WORLD
         friction();
-        if (hp > 0) {
+        if (hp > 0 && score < goal) {
             world.step(1 / 60f, 6, 2);
         }
         // endregion
 
         collectPollen();
+        collectLadybugs();
+        fatShooting();
 
         checkToRemove(bugs);
-        checkToRemove(wasps);
+        checkToRemove(waspsN);
+        checkToRemove(waspsP);
+        checkToRemove(waspsF);
+        checkToRemove(bullets);
+        checkToRemove(ladybugs);
+
+        // region PLAYER HIT
+        float hit_time = 3f;
+        if (hit_timer > hit_time && player.getName() != null && player.getName().equals("was_hit")) {
+            hit_timer = 0f;
+            player.setName(null);
+            hitPlayer();
+        } else {
+            hit_timer += delta;
+        }
+        if (hit_timer < hit_time) {
+            player.setName(null);
+            if (!player.getParts().get(0).hasActions()) {
+                player.getParts().get(0).addAction(Actions.sequence(
+                        Actions.alpha(.25f, .25f),
+                        Actions.alpha(1f, .25f)
+                ));
+            }
+        }
+        // endregion
 
         /* ESC listener */
         if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
-            g.sounds.bee_fly.stop(bee_fly_instance);
-            g.sounds.bee_fly.dispose();
-            this.dispose(); Gdx.app.exit();
+            change_screen = true;
+            next_screen = new Menu(g);
+            g.sounds.music_2.stop();
+            for (Actor act : stage.getActors()) act.addAction(Actions.alpha(0f, .5f));
         }
         //
     }
@@ -286,12 +350,17 @@ public class Field extends AdvScreen {
         //
         ants = new ArrayList<>();
         bugs = new ArrayList<>();
-        wasps = new ArrayList<>();
+        waspsN = new ArrayList<>();
+        waspsP = new ArrayList<>();
+        waspsF = new ArrayList<>();
+        pollen = new ArrayList<>();
+        bullets = new ArrayList<>();
+        ladybugs = new ArrayList<>();
         movingBodies = new ArrayList<>();
 
         // region PLAYER_INIT
         player = new AdvBody(
-                new Vector2(6f * Main.METER, 10f * Main.METER),
+                new Vector2(60f, 100f),
                 BodyDef.BodyType.DynamicBody
         );
         player.createBody(world);
@@ -320,7 +389,7 @@ public class Field extends AdvScreen {
         // endregion
         // region QUEEN_INIT
         queen = new AdvBody(
-                new Vector2(12.5f * Main.METER, 6f * Main.METER),
+                new Vector2(125f, 60f),
                 BodyDef.BodyType.StaticBody
         );
         queen.createBody(world);
@@ -342,12 +411,12 @@ public class Field extends AdvScreen {
         // region QUEEN_GUARD_INIT
         q_guards = new AdvBody[2];
         q_guards[0] = new AdvBody(
-                new Vector2(15f * Main.METER, 5f * Main.METER),
+                new Vector2(150f, 50f),
                 BodyDef.BodyType.StaticBody
         );
         q_guards[0].createBody(world);
         q_guards[1] = new AdvBody(
-                new Vector2(10f * Main.METER, 5f * Main.METER),
+                new Vector2(100f, 50f),
                 BodyDef.BodyType.StaticBody
         );
         q_guards[1].createBody(world);
@@ -394,9 +463,9 @@ public class Field extends AdvScreen {
         wallsShape.createChain(
                 new float[]{
                         0f, 0f,
-                        0f, 100f * Main.METER,
-                        100f * Main.METER, 100f * Main.METER,
-                        100f * Main.METER, 0f,
+                        0f, 1000f,
+                        1000f, 1000f,
+                        1000f, 0f,
                         0f, 0f,
                 }
         );
@@ -416,12 +485,12 @@ public class Field extends AdvScreen {
         ChainShape hiveShape = new ChainShape();
         hiveShape.createChain(
                 new float[]{
-                        11f * Main.METER, 21.25f * Main.METER,
-                        5f * Main.METER, 21.25f * Main.METER,
-                        5f * Main.METER, 3.35f * Main.METER,
-                        19.375f * Main.METER, 3.35f * Main.METER,
-                        19.375f * Main.METER, 21.25f * Main.METER,
-                        13.375f * Main.METER, 21.25f * Main.METER,
+                        110f, 212.5f,
+                        50f, 212.5f,
+                        50f, 33.5f,
+                        193.75f, 33.5f,
+                        193.75f, 212.5f,
+                        133.75f, 212.5f
                 }
         );
 
@@ -429,9 +498,6 @@ public class Field extends AdvScreen {
         hive_fd.shape = hiveShape;
 
         hive.getBody().createFixture(hive_fd);
-        // endregion
-        // region POLLEN_INIT
-        pollen = new ArrayList<>();
         // endregion
 
         movingBodies.add(player);
@@ -446,15 +512,21 @@ public class Field extends AdvScreen {
     private void text_initialization() {
         //
         test_text = new TextLine(
-                g.fonts.f_5,
+                g.fonts.f_5S,
                 "test",
                 0.025f * g.w,
                 g.fonts.f_5.getHeight("A") + 0.025f * g.w
         );
         score_text = new TextLine(
-                g.fonts.f_5,
+                g.fonts.f_5S,
                 g.bundle.get("score") + ": " + score,
                 0.975f * g.w - g.fonts.f_5.getWidth(g.bundle.get("score") + ": " + score),
+                0.975f * g.h
+        );
+        goal_text = new TextLine(
+                g.fonts.f_5S,
+                g.bundle.get("goal") + ": " + goal,
+                0.975f * g.w - 1.5f * g.fonts.f_5.getWidth(g.bundle.get("goal") + ": " + goal),
                 0.975f * g.h
         );
         //
@@ -495,6 +567,53 @@ public class Field extends AdvScreen {
                     0.0375f * g.w
             ));
         }
+        queen_clouds = new ArrayList<>();
+        queen_clouds.add(new AdvSprite(
+                g.atlas.createSprite("cloud", 1),
+                90f * Main.METER,
+                70f * Main.METER,
+                .2f * g.w,
+                .2f * g.w
+        ));
+        queen_clouds.get(0).getColor().a = 0;
+        queen_clouds.get(0).addAction(Actions.forever(Actions.sequence(
+                Actions.alpha(1f, 1f),
+                Actions.delay(4f),
+                Actions.alpha(0f,1f),
+                Actions.delay(12f)
+                )));
+        queen_clouds.add(new AdvSprite(
+                g.atlas.createSprite("cloud", 2),
+                90f * Main.METER,
+                70f * Main.METER,
+                .2f * g.w,
+                .2f * g.w
+        ));
+        queen_clouds.get(1).getColor().a = 0;
+        queen_clouds.get(1).addAction(Actions.sequence(
+                Actions.delay(6f),
+                Actions.forever(Actions.sequence(
+                    Actions.alpha(1f, 1f),
+                    Actions.delay(4f),
+                    Actions.alpha(0f,1f),
+                    Actions.delay(12f)
+                ))));
+        queen_clouds.add(new AdvSprite(
+                g.atlas.createSprite("cloud", 3),
+                90f * Main.METER,
+                70f * Main.METER,
+                .2f * g.w,
+                .2f * g.w
+        ));
+        queen_clouds.get(2).getColor().a = 0;
+        queen_clouds.get(2).addAction(Actions.sequence(
+                Actions.delay(12f),
+                Actions.forever(Actions.sequence(
+                        Actions.alpha(1f, 1f),
+                        Actions.delay(4f),
+                        Actions.alpha(0f,1f),
+                        Actions.delay(12f)
+                ))));
         // endregion
         // region Flowers init
         flowers = new ArrayList<>();
@@ -722,7 +841,7 @@ public class Field extends AdvScreen {
                     new Vector2(
                             x,
                             y
-                    ).nor().scl(150f * Main.METER),
+                    ).nor().scl(1500f),
                     true
             );
         }
@@ -759,9 +878,9 @@ public class Field extends AdvScreen {
         float x;
         float y;
         do {
-            x = 100f * Main.METER * MathUtils.random();
-            y = 100f * Main.METER * MathUtils.random();
-        } while (x < 20f * Main.METER && y < 20f * Main.METER);
+            x = 1000f * MathUtils.random();
+            y = 1000f * MathUtils.random();
+        } while (x < 200f && y < 200f);
 
         Bug bug = new Bug(
                 g,
@@ -814,7 +933,7 @@ public class Field extends AdvScreen {
         float y = flowers.get(rand_flower).getY() + .5f * flowers.get(rand_flower).getHeight();
         pollen.add(
                 new AdvBody(
-                        new Vector2(x / 10f, y / 10f),
+                        new Vector2(x / Main.METER, y / Main.METER),
                         BodyDef.BodyType.DynamicBody
                 )
         );
@@ -861,15 +980,51 @@ public class Field extends AdvScreen {
         ));
         stage.addActor(map_pollen.get(map_pollen.size() - 1));
     }
-    private void spawnWasp() {
+    private void spawnLadybug() {
         float x;
         float y;
         do {
-            x = 100f * Main.METER * MathUtils.random();
-            y = 100f * Main.METER * MathUtils.random();
-        } while (x < 30f * Main.METER && y < 30f * Main.METER);
+            x = 1000f * MathUtils.random();
+            y = 1000f * MathUtils.random();
+        } while (x < 200f && y < 200f);
 
-        Wasp wasp = new Wasp(
+        Bug bug = new Bug(
+                g,
+                world,
+                x,
+                y,
+                100f,
+                2f + MathUtils.random(),
+                10
+        );
+        bug.setStateTimer(2f + (3f * MathUtils.random()));
+
+        ladybugs.add(bug);
+        movingBodies.add(bug.getAdvBody());
+
+        stage.addActor(bug);
+        stage.addActor(bug.getAdvBody());
+        for (AdvBodyPart part : bug.getAdvBody().getParts()) {
+            stage.addActor(part);
+            part.addAction(Actions.sequence(
+                    Actions.alpha(0f),
+                    Actions.sizeTo(0f, 0f),
+                    Actions.parallel(
+                            Actions.alpha(1f, 1f),
+                            Actions.sizeTo(bug.getWidth(), bug.getHeight(), 1f)
+                    )
+            ));
+        }
+    }
+    private void spawnWaspP() {
+        float x;
+        float y;
+        do {
+            x = 1000f * MathUtils.random();
+            y = 1000f * MathUtils.random();
+        } while (x < 300f && y < 300f);
+
+        WaspP wasp = new WaspP(
                 g,
                 world,
                 x,
@@ -879,7 +1034,7 @@ public class Field extends AdvScreen {
         );
         wasp.setStateTimer(2f + (3f * MathUtils.random()));
 
-        wasps.add(wasp);
+        waspsP.add(wasp);
         movingBodies.add(wasp.getAdvBody());
 
         stage.addActor(wasp);
@@ -894,6 +1049,115 @@ public class Field extends AdvScreen {
                             Actions.sizeTo(wasp.getWidth(), wasp.getHeight(), 1f)
                     )
             ));
+        }
+    }
+    private void spawnWaspN() {
+        float x;
+        float y;
+        do {
+            x = 1000f * MathUtils.random();
+            y = 1000f * MathUtils.random();
+        } while (x < 300f && y < 300f);
+
+        WaspN wasp = new WaspN(
+                g,
+                world,
+                x,
+                y,
+                100f,
+                5f + MathUtils.random()
+        );
+        wasp.setStateTimer(2f + (3f * MathUtils.random()));
+
+        waspsN.add(wasp);
+        movingBodies.add(wasp.getAdvBody());
+
+        stage.addActor(wasp);
+        stage.addActor(wasp.getAdvBody());
+        for (AdvBodyPart part : wasp.getAdvBody().getParts()) {
+            stage.addActor(part);
+            part.addAction(Actions.sequence(
+                    Actions.alpha(0f),
+                    Actions.sizeTo(0f, 0f),
+                    Actions.parallel(
+                            Actions.alpha(1f, 1f),
+                            Actions.sizeTo(wasp.getWidth(), wasp.getHeight(), 1f)
+                    )
+            ));
+        }
+    }
+    private void spawnWaspF() {
+        float x;
+        float y;
+        do {
+            x = 1000f * MathUtils.random();
+            y = 1000f * MathUtils.random();
+        } while (x < 300f && y < 300f);
+
+        WaspF wasp = new WaspF(
+                g,
+                world,
+                x,
+                y,
+                100f,
+                7f + MathUtils.random()
+        );
+        wasp.setStateTimer(2f + (3f * MathUtils.random()));
+
+        waspsF.add(wasp);
+        movingBodies.add(wasp.getAdvBody());
+
+        stage.addActor(wasp);
+        stage.addActor(wasp.getAdvBody());
+        for (AdvBodyPart part : wasp.getAdvBody().getParts()) {
+            stage.addActor(part);
+            part.addAction(Actions.sequence(
+                    Actions.alpha(0f),
+                    Actions.sizeTo(0f, 0f),
+                    Actions.parallel(
+                            Actions.alpha(1f, 1f),
+                            Actions.sizeTo(wasp.getWidth(), wasp.getHeight(), 1f)
+                    )
+            ));
+        }
+    }
+    private void spawnBullet(WaspF wasp) {
+        float c_x = wasp.getAdvBody().getX() + .5f * wasp.getAdvBody().getWidth();
+        float c_y = wasp.getAdvBody().getY() + .5f * wasp.getAdvBody().getHeight();
+        float radius = .5f * wasp.getAdvBody().getHeight();
+
+        Vector2 direction = new Vector2(
+                Field.player.getX() - c_x,
+                Field.player.getY() - c_y
+        );
+        Vector2 position = new Vector2(c_x, c_y).add(
+                direction.nor().scl(1.1f * radius)
+        );
+
+        Bullet bullet = new Bullet(
+                g,
+                world,
+                position.x / Main.METER,
+                position.y / Main.METER,
+                3f,
+                2f
+        );
+
+        bullets.add(bullet);
+        movingBodies.add(bullet.getAdvBody());
+
+        direction.nor().scl(30000f);
+        bullet.getAdvBody().getBody().applyForceToCenter(
+                direction,
+                true
+        );
+        float angle = (float)(Math.atan2(direction.x, direction.y));
+        bullet.getAdvBody().getBody().setTransform(bullet.getAdvBody().getBody().getPosition(), -angle);
+
+        stage.addActor(bullet);
+        stage.addActor(bullet.getAdvBody());
+        for (AdvBodyPart part : bullet.getAdvBody().getParts()) {
+            stage.addActor(part);
         }
     }
 
@@ -921,6 +1185,8 @@ public class Field extends AdvScreen {
         stage.addActor(queen);
         for (AdvBodyPart part : queen.getParts())
             stage.addActor(part);
+        for (AdvSprite s : queen_clouds)
+            stage.addActor(s);
 
         stage.addActor(map);
         stage.addActor(map_queen);
@@ -929,8 +1195,11 @@ public class Field extends AdvScreen {
         for (AdvSprite s : ui_hp)
             stage.addActor(s);
 
-        stage.addActor(test_text);
+        if (g.is_dev_mode) {
+            stage.addActor(test_text);
+        }
         stage.addActor(score_text);
+        stage.addActor(goal_text);
         stage.addActor(camera);
     }
 
@@ -957,7 +1226,9 @@ public class Field extends AdvScreen {
                     Actions.sizeBy(0f, -.0125f * g.w, .1f),
                     Actions.sizeBy(0f, .0125f * g.w, .1f)
             ));
-            g.sounds.hurt.play(g.sound_volume);
+            if (g.is_sound) {
+                g.sounds.hurt.play(g.sound_volume);
+            }
             hp--;
         }
     }
@@ -989,7 +1260,9 @@ public class Field extends AdvScreen {
             Body body = pollen.get(i).getBody();
             if (body != null) {
                 if (pollen.get(i).getName() != null && pollen.get(i).getName().equals("for_delete")) {
-                    g.sounds.coin.play(g.sound_volume);
+                    if (g.is_sound) {
+                        g.sounds.coin.play(g.sound_volume);
+                    }
                     score += 10;
                     // deletion
                     final Array<JointEdge> list = body.getJointList();
@@ -1008,6 +1281,31 @@ public class Field extends AdvScreen {
                     movingBodies.remove(pollen.get(i));
                     pollen.get(i).remove();
                     pollen.remove(i);
+                }
+            }
+        }
+    }
+    private void collectLadybugs() {
+        for (Bug ladybug : ladybugs) {
+            if (ladybug.getName() != null && ladybug.getName().equals("consumed")) {
+                ladybug.setName(null);
+                ladybug.kill();
+                if (g.is_sound) {
+                    g.sounds.healing.play(g.sound_volume);
+                }
+                if (hp < 3) {
+                    hp++;
+                }
+            }
+        }
+    }
+    private void fatShooting() {
+        for (WaspF wasp : waspsF) {
+            if (wasp.getName() != null && wasp.getName().equals("shooting")) {
+                wasp.setName(null);
+                spawnBullet(wasp);
+                if (g.is_sound) {
+                    g.sounds.shoot.play(g.sound_volume);
                 }
             }
         }

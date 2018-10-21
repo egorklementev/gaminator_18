@@ -108,7 +108,7 @@ public class Bug extends Entity {
                                 new Vector2(
                                         x,
                                         y
-                                ).nor().scl(450f * Main.METER),
+                                ).nor().scl(4500f),
                                 true
                         );
                     }

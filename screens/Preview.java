@@ -57,13 +57,16 @@ public class Preview extends AdvScreen {
         g.music_volume = g.prefs.getFloat("music_volume", 1f);
         g.sound_volume = g.prefs.getFloat("sound_volume", 1f);
 
+        g.level = g.prefs.getInteger("level", 0);
+        g.is_dev_mode = g.prefs.getBoolean("is_dev_mode", false);
+
         if (g.is_music) {
             g.sounds.music_1.setLooping(true);
             g.sounds.music_1.setVolume(g.music_volume);
             g.sounds.music_1.play();
         }
 
-        Main.METER = 10f;
+        Main.METER = g.w / 192f;
 
         logo = new AdvSprite(
                 g.atlas.createSprite("logo_gmntr"),

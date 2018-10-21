@@ -11,7 +11,7 @@ import ru.erked.beelife.Main;
 import ru.erked.beelife.physics.AdvBodyPart;
 import ru.erked.beelife.screens.Field;
 
-public class Wasp extends Entity {
+public class WaspN extends Entity {
 
     private float attack_timer = 0f;
     private Animation<TextureRegion> animation;
@@ -21,7 +21,7 @@ public class Wasp extends Entity {
      *  @param x x-coordinate in meters
      *  @param y y-coordinate in meters
      *  @param size size in units*/
-    public Wasp(Main g, World world, float x, float y, float lifetime, float size) {
+    public WaspN(Main g, World world, float x, float y, float lifetime, float size) {
         super(world, x, y, lifetime);
 
         setSize(2f * size * Main.METER, 2f * size * Main.METER);
@@ -81,7 +81,7 @@ public class Wasp extends Entity {
                 Field.player.getY() - getAdvBody().getY()
         );
 
-        if (distance.len() <= 100f * Main.METER) {
+        if (distance.len() <= 750f) {
             getFsa().changeState(getFsa().getState("attack"));
 
             getAdvBody().getParts().get(0).getSprite().setRegion(animation.getKeyFrame(Field.state_time, true));
@@ -90,7 +90,7 @@ public class Wasp extends Entity {
             if (attack_timer > attack_time) {
                 attack_timer = -.5f + MathUtils.random();
                 getAdvBody().getBody().applyForceToCenter(
-                        distance.nor().scl(10000f * Main.METER),
+                        distance.nor().scl(100000f),
                         true
                 );
             } else {
@@ -131,7 +131,7 @@ public class Wasp extends Entity {
                                     new Vector2(
                                             x,
                                             y
-                                    ).nor().scl(1500f * Main.METER),
+                                    ).nor().scl(15000f),
                                     true
                             );
                         }

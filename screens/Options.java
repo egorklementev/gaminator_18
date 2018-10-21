@@ -32,9 +32,11 @@ public class Options extends AdvScreen {
 
     /* Buttons */
     private Button back;
+    private Button dev_mode;
 
     /* Text */
     private TextLine text_options;
+    private TextLine text_dev_mode;
 
     /* Random */
     private float cursor_x = Gdx.input.getX(); // For rhombus movement
@@ -169,6 +171,13 @@ public class Options extends AdvScreen {
                 0.9f * g.h
         );
         text_options.setX(0.5f * (g.w - text_options.getWidth()));
+
+        text_dev_mode = new TextLine(
+                g.fonts.f_0S,
+                g.bundle.get("is_dev_mode"),
+                .4f * g.w,
+                .1f * g.h
+        );
         //
     }
     private void texture_initialization() {
@@ -225,6 +234,27 @@ public class Options extends AdvScreen {
                 for (Actor act : stage.getActors()) act.addAction(Actions.alpha(0f, 0.5f));
             }
         });
+        /* --DEV MODE-- */
+        dev_mode = new Button(
+                g,
+                .325f * g.w,
+                .025f * g.w,
+                .05f * g.w,
+                g.fonts.f_5.getFont(),
+                g.is_dev_mode ? "1" : "0",
+                2,
+                "dev_btn"
+        );
+        dev_mode.get().setChecked(g.is_dev_mode);
+        dev_mode.get().addListener(new ClickListener(){
+            @Override
+            public void clicked (InputEvent event, float x, float y) {
+                if (g.is_sound) g.sounds.click.play(g.sound_volume); // Click sound
+                g.is_dev_mode = !(g.is_dev_mode);
+                dev_mode.get().setText(g.is_dev_mode ? "1" : "0");
+                dev_mode.get().setChecked(g.is_dev_mode);
+            }
+        });
 
         /* --LANG_RU-- */
         lang_ru = new AdvSprite(
@@ -245,6 +275,7 @@ public class Options extends AdvScreen {
                 g.bundle = I18NBundle.createBundle(Gdx.files.internal("lang/ru_RU"));
                 text_options.setText(g.bundle.get("options_btn"));
                 text_options.setPosition(.5f*(g.w - g.fonts.f_0S.getWidth(g.bundle.get("options_btn"))), text_options.getY());
+                text_dev_mode.setText(g.bundle.get("is_dev_mode"));
                 back.get().setText(g.bundle.get("back_btn"));
             }
         });
@@ -268,6 +299,7 @@ public class Options extends AdvScreen {
                 g.bundle = I18NBundle.createBundle(Gdx.files.internal("lang/en_US"));
                 text_options.setText(g.bundle.get("options_btn"));
                 text_options.setPosition(.5f*(g.w - g.fonts.f_0S.getWidth(g.bundle.get("options_btn"))), text_options.getY());
+                text_dev_mode.setText(g.bundle.get("is_dev_mode"));
                 back.get().setText(g.bundle.get("back_btn"));
             }
         });
@@ -367,6 +399,7 @@ public class Options extends AdvScreen {
         //
         for (AdvSprite s : background) stage.addActor(s);
         stage.addActor(back.get());
+        stage.addActor(dev_mode.get());
         stage.addActor(lang_en);
         stage.addActor(lang_ru);
         stage.addActor(music_on);
@@ -376,6 +409,7 @@ public class Options extends AdvScreen {
         stage.addActor(r_music);
         stage.addActor(r_sound);
         stage.addActor(text_options);
+        stage.addActor(text_dev_mode);
         //
     }
 

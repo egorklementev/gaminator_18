@@ -29,6 +29,8 @@ public class AdvScreen implements Screen {
         g.prefs.putBoolean("is_music_on", g.is_music);
         g.prefs.putBoolean("is_sound_on", g.is_sound);
         g.prefs.putInteger("language", g.lang);
+        g.prefs.putInteger("level", g.level);
+        g.prefs.putBoolean("is_dev_mode", g.is_dev_mode);
 
         g.prefs.flush();
     }

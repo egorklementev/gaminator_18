@@ -24,20 +24,19 @@ public class Entity extends Actor {
      *  @param y y-coordinate in meters*/
     public Entity(World world, float x, float y, float lifetime) {
         this.lifetime = lifetime;
-        // region Body init
+
         body = new AdvBody(
                 new Vector2(x, y),
                 BodyDef.BodyType.DynamicBody
         );
         body.createBody(world);
-        // endregion
-        // region FSA init
+
         fsa = new FSA();
-        // endregion
     }
 
     public void kill() {
         if (is_alive) {
+            lifetime = 0f;
             for (AdvBodyPart part : body.getParts()) {
                 part.addAction(Actions.sequence(
                         Actions.sizeTo(0f, 0f, 1f),
