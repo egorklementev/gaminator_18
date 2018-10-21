@@ -18,10 +18,15 @@ public class TextNotification extends TextLine {
     @Override
     public void draw(Batch batch, float parentAlpha) {
         super.draw(batch, parentAlpha);
-        addAction(Actions.moveBy(0f, speed));
-        if (lifetime <= 1f && lifetime >= 0f) addAction(Actions.alpha(lifetime));
-        lifetime -= Gdx.graphics.getDeltaTime();
-        speed *= 0.9f;
+        if (lifetime < 0) {
+            remove();
+        }
+        else {
+            addAction(Actions.moveBy(0f, speed));
+            if (lifetime <= 1f && lifetime >= 0f) addAction(Actions.alpha(lifetime));
+            lifetime -= Gdx.graphics.getDeltaTime();
+            speed *= 0.9f;
+        }
     }
 
     public boolean isOver () { return lifetime < 0; }

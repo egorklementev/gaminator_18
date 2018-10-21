@@ -11,6 +11,9 @@ public class Sounds {
 
     /* Random */
     public Sound click;
+    public Sound bee_fly;
+    public Sound coin;
+    public Sound hurt;
 
     /* Music */
     public Music music_1;
@@ -25,6 +28,9 @@ public class Sounds {
         m_list = new ArrayList<>();
 
         click = Gdx.audio.newSound(Gdx.files.internal("sounds/random/click.wav"));
+        bee_fly = Gdx.audio.newSound(Gdx.files.internal("sounds/random/bee_fly.wav"));
+        coin = Gdx.audio.newSound(Gdx.files.internal("sounds/random/coin.wav"));
+        hurt = Gdx.audio.newSound(Gdx.files.internal("sounds/random/hurt.wav"));
 
         music_1 = Gdx.audio.newMusic(Gdx.files.internal("sounds/music/music_1.mp3"));
         music_2 = Gdx.audio.newMusic(Gdx.files.internal("sounds/music/music_2.mp3"));

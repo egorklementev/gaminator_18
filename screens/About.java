@@ -120,8 +120,9 @@ public class About extends AdvScreen {
         //
         captions = new InGameText(g, g.fonts.f_5S, new String[]{
                 "captions_1","captions_2","captions_3","captions_4","captions_5","captions_6",
-                "captions_7","captions_8","captions_9","captions_10","captions_11"
-        }, new int[]{0,2,3,5,6,8,9,10,12,13,15}, true);
+                "captions_7","captions_8","captions_9","captions_10","captions_11","captions_12",
+                "captions_13"
+        }, new int[]{0,2,3,5,6,8,9,11,12,13,14,15,17}, true);
         //
     }
     private void texture_initialization() {

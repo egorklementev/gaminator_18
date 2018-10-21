@@ -63,7 +63,7 @@ public class Preview extends AdvScreen {
             g.sounds.music_1.play();
         }
 
-        Main.METER = g.w / 192f;
+        Main.METER = 10f;
 
         logo = new AdvSprite(
                 g.atlas.createSprite("logo_gmntr"),

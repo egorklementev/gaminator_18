@@ -4,8 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
@@ -42,6 +40,11 @@ public class Options extends AdvScreen {
     private float cursor_x = Gdx.input.getX(); // For rhombus movement
     private float cursor_y = Gdx.input.getY(); // For rhombus movement
     private final int HONEYCOMBS = 10; // Background
+    private boolean was_touched = false;
+    private boolean s_satisfy_x = false;
+    private boolean s_satisfy_y = false;
+    private boolean m_satisfy_x = false;
+    private boolean m_satisfy_y = false;
 
     Options (Main game) {
         //
@@ -122,24 +125,30 @@ public class Options extends AdvScreen {
     private void rhombuses_movement() {
         //
         /* Move rhombuses using cursor */
-        if (Gdx.input.isTouched()) {
 
-            boolean satisfy_x = cursor_x >= r_music.getX() &&
+        if (Gdx.input.isTouched() && !was_touched) {
+
+            was_touched = true;
+
+            m_satisfy_x = cursor_x >= r_music.getX() &&
                     cursor_x <= r_music.getX() + r_music.getWidth();
-            boolean satisfy_y = cursor_y >= r_music.getY() &&
+            m_satisfy_y = cursor_y >= r_music.getY() &&
                     cursor_y <= r_music.getY() + r_music.getHeight();
 
-            if (satisfy_x && satisfy_y)
-                r_music.addAction(Actions.moveBy(Gdx.input.getDeltaX(), 0f));
-
-            satisfy_x = cursor_x >= r_sound.getX() &&
+            s_satisfy_x = cursor_x >= r_sound.getX() &&
                     cursor_x <= r_sound.getX() + r_sound.getWidth();
-            satisfy_y = cursor_y >= r_sound.getY() &&
+            s_satisfy_y = cursor_y >= r_sound.getY() &&
                     cursor_y <= r_sound.getY() + r_sound.getHeight();
 
-            if (satisfy_x && satisfy_y)
+        } else if (Gdx.input.isTouched()) {
+            if (m_satisfy_x && m_satisfy_y)
+                r_music.addAction(Actions.moveBy(Gdx.input.getDeltaX(), 0f));
+            if (s_satisfy_x && s_satisfy_y)
                 r_sound.addAction(Actions.moveBy(Gdx.input.getDeltaX(), 0f));
+        } else if (!Gdx.input.isTouched()) {
+            was_touched = false;
         }
+
         if (r_music.getX() < scroll_m.getX()) r_music.setX(scroll_m.getX());
         if (r_music.getX() + r_music.getWidth() > scroll_m.getX() + scroll_m.getWidth())
             r_music.setX(scroll_m.getX() + scroll_m.getWidth() - r_music.getWidth());
